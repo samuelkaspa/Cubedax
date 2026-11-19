@@ -1,6 +1,6 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><title>cubedax</title>
 <style>
-*{-webkit-tap-highlight-color:transparent;transition:none!important}
+*{-webkit-tap-highlight-color:transparent}
 button,.b{touch-action:manipulation}
 html,body{margin:0;height:100%;background:#ece9e2;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none;font-family:system-ui,sans-serif;color:#111}
 [hidden]{display:none!important}
@@ -375,7 +375,7 @@ function draw(){
  if(flash>.02){ctx.fillStyle='rgba(225,29,46,'+flash*.25+')';ctx.fillRect(0,0,S,S)}
  if(msgT>0){ctx.globalAlpha=Math.min(1,msgT/30);ctx.fillStyle='#111';ctx.font='bold 16px system-ui,sans-serif';ctx.textAlign='center';ctx.fillText(msg,S/2,40);ctx.globalAlpha=1}hud()}
 let last=performance.now(),acc=0;
-function loop(n){acc+=Math.min(100,n-last);last=n;while(acc>=16.667){update();acc-=16.667}draw();requestAnimationFrame(loop)}
+function loop(n){requestAnimationFrame(loop);try{acc+=Math.min(100,n-last);last=n;while(acc>=16.667){acc-=16.667;update()}draw()}catch(e){acc=0;last=n;const m=String(e&&e.stack||e).replace(/\s+/g,' ');try{ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.fillStyle='#fff';ctx.fillRect(0,0,S,52);ctx.fillStyle='#b91c1c';ctx.font='11px monospace';ctx.textAlign='left';ctx.fillText(m.slice(0,95),4,18);ctx.fillText(m.slice(95,190),4,34)}catch(x){}}}
 const KM={ArrowLeft:[0,'left'],ArrowRight:[0,'right'],ArrowUp:[0,'jump'],ArrowDown:[0,'down'],KeyA:[1,'left'],KeyD:[1,'right'],KeyW:[1,'jump'],KeyS:[1,'down'],Space:[0,'jump']};
 function setK(code,v){const m=KM[code];if(!m)return false;let i=m[0];i=0;const k=KS[i];if(v&&!k[m[1]]){if(m[1]==='jump')k.jp=true;if(m[1]==='down')k.dp=true}k[m[1]]=v;return true}
 addEventListener('keydown',e=>{if(e.repeat||e.target.tagName==='INPUT')return;if(setK(e.code,true)){document.body.classList.remove('touch');e.preventDefault();return}
@@ -530,7 +530,7 @@ function showSkins(back){inSk=true;let h='<h2>🎨 Escolha sua skin</h2><div cla
  $('sbk').onclick=()=>{inSk=false;back()}}
 /* overlay sem re-animar a cada atualização (evita botões "pulando") */
 function showOv(h){const was=!ovEl.hidden,sc=ovEl.scrollTop;ovEl.innerHTML=h;ovEl.classList.toggle('re',was);ovEl.hidden=false;if(was)ovEl.scrollTop=sc;tClear()}
-function showStart(){inSk=false;leaveAll();showOv('<h2>cubedax</h2><p>Recorde: <b>'+recTxt(rec)+'</b></p><button class="gob" id="go">Começar</button><button class="gob alt" id="mpb">Modo multiplayer</button><button class="gob alt" id="skb">🎨 Skin do cubo</button><button class="gob alt" id="cf">⚙ Configurações</button>');
+function showStart(){inSk=false;leaveAll();showOv('<h2>cubedax</h2><p>Recorde: <b>'+recTxt(rec)+'</b></p><p style="font-size:11px;opacity:.5">build 5</p><button class="gob" id="go">Começar</button><button class="gob alt" id="mpb">Modo multiplayer</button><button class="gob alt" id="skb">🎨 Skin do cubo</button><button class="gob alt" id="cf">⚙ Configurações</button>');
  $('go').onclick=()=>{hideOv();recSave(1)};$('mpb').onclick=openMP;$('skb').onclick=()=>showSkins(showStart);$('cf').onclick=showCfg}
 function renderRoom(){if(!room||inSk)return;const me=room.players.find(z=>z.s===mySlot)||{},host=room.host===mySlot,md=MODES[room.mode]||MODES.normal,ok=room.players.length>=2&&room.players.every(z=>z.s===room.host||z.ready);
  let h='<h2>Sala <span class="code">'+room.code+'</span></h2><p>'+(room.priv?'🔒 Privada':'🌐 Pública')+' · '+room.players.length+'/'+room.max+' jogadores</p><div class="pl">';
