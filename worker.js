@@ -1,3 +1,4 @@
+import html from './index.html';
 // Servidor multiplayer do Cubo Preto (Cloudflare Worker + Durable Object).
 // Todas as salas vivem em um único Durable Object ("global"): simples e suficiente para um jogo pequeno.
 const CH='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -64,5 +65,5 @@ export default{
  async fetch(req,env){
   const u=new URL(req.url);
   if(u.pathname==='/ws')return env.HUB.get(env.HUB.idFromName('global')).fetch(req);
-  return env.ASSETS.fetch(req)}
+  return new Response(html,{headers:{'content-type':'text/html;charset=utf-8','cache-control':'no-cache'}})}
 };

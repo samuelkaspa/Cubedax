@@ -1,10 +1,11 @@
-name = "cubo-preto"
-main = "src/worker.js"
+name = "cubedax"
+main = "worker.js"
 compatibility_date = "2025-01-01"
 
-[assets]
-directory = "./public"
-binding = "ASSETS"
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = true
 
 [[durable_objects.bindings]]
 name = "HUB"
