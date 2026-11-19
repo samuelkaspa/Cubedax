@@ -50,7 +50,7 @@ export class Hub{
    case'sub':c.sub=!!m.v;if(c.sub)this.send(c,{t:'rooms',list:this.list()});break;
    case'prof':c.name=clean(m.name,12)||'Cubedax';c.rec=clean(m.rec,12)||'—';c.skin=clean(m.skin,10)||'preto';if(r){this.sync(r);this.push()}break;
    case'create':{if(r)return;let code;do{code=Array.from({length:4},()=>CH[rnd(CH.length)]).join('')}while(this.rooms.has(code));
-    const room={code,priv:!!m.priv,mode:'normal',max:Math.max(2,Math.min(4,+m.max||4)),host:0,started:false,pl:[c],retry:new Set(),kind:'coop',rt:20,rp:3,score:[0,0,0,0],round:0,rd:null,rdy:new Set(),rto:0,lt:-1};
+    const room={code,priv:!!m.priv,mode:'normal',max:Math.max(2,Math.min(4,+m.max||4)),host:0,started:false,pl:[c],retry:new Set(),kind:KINDS.has(m.kind)?m.kind:'coop',rt:20,rp:3,score:[0,0,0,0],round:0,rd:null,rdy:new Set(),rto:0,lt:-1};
     this.rooms.set(code,room);c.room=room;c.s=0;c.ready=false;this.sync(room);this.push();break}
    case'join':{if(r)return;const room=this.rooms.get(clean(m.code,4).toUpperCase());
     if(!room)return this.send(c,{t:'err',m:'Sala não encontrada.'});

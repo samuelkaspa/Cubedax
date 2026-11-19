@@ -468,10 +468,10 @@ function showCfg(){showOv('<h2>⚙ Configurações</h2><p>Seu nome (aparece sobr
 function openMP(){showOv('<h2>Modo multiplayer</h2><div class="row"><button class="gob" id="tcr">Criar sala</button><button class="gob alt" id="tjn">Entrar</button></div><div class="pn" id="pn"></div><p id="er" style="color:#b91c1c;min-height:1.2em"></p><button class="gob alt" id="bk">Voltar</button>');
  $('bk').onclick=showStart;$('tcr').onclick=()=>{lobTab='create';tab()};$('tjn').onclick=()=>{lobTab='join';tab()};conn(()=>net({t:'sub',v:true}));tab()}
 function tab(){$('tcr').className='gob'+(lobTab==='create'?'':' alt');$('tjn').className='gob'+(lobTab==='join'?'':' alt');const pn=$('pn');
- if(lobTab==='create'){pn.innerHTML='<p>Visibilidade</p><div class="row"><button class="gob" id="vp">Pública</button><button class="gob alt" id="vv">Privada</button></div><p>Máximo de jogadores</p><div class="row"><button class="gob alt" data-m="2">2</button><button class="gob alt" data-m="3">3</button><button class="gob" data-m="4">4</button></div><button class="gob" id="mk">Criar sala</button>';
-  const sv=()=>{$('vp').className='gob'+(cPriv?' alt':'');$('vv').className='gob'+(cPriv?'':' alt');pn.querySelectorAll('[data-m]').forEach(b=>b.className='gob'+(+b.dataset.m===cMax?'':' alt'))};
-  $('vp').onclick=()=>{cPriv=false;sv()};$('vv').onclick=()=>{cPriv=true;sv()};pn.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{cMax=+b.dataset.m;sv()});sv();
-  $('mk').onclick=()=>conn(()=>net({t:'create',priv:cPriv,max:cMax}))}
+ if(lobTab==='create'){pn.innerHTML='<p>Tipo de partida</p><div class="row"><button class="gob" id="kc">Cooperativo</button><button class="gob" id="kr">🏁 Corrida</button></div><p>Visibilidade</p><div class="row"><button class="gob" id="vp">Pública</button><button class="gob alt" id="vv">Privada</button></div><p>Máximo de jogadores</p><div class="row"><button class="gob alt" data-m="2">2</button><button class="gob alt" data-m="3">3</button><button class="gob" data-m="4">4</button></div><button class="gob" id="mk">Criar sala</button>';
+  const sv=()=>{$('kc').className='gob'+(cKind==='race'?' alt':'');$('kr').className='gob'+(cKind==='race'?'':' alt');$('vp').className='gob'+(cPriv?' alt':'');$('vv').className='gob'+(cPriv?'':' alt');pn.querySelectorAll('[data-m]').forEach(b=>b.className='gob'+(+b.dataset.m===cMax?'':' alt'))};
+  $('kc').onclick=()=>{cKind='coop';sv()};$('kr').onclick=()=>{cKind='race';sv()};$('vp').onclick=()=>{cPriv=false;sv()};$('vv').onclick=()=>{cPriv=true;sv()};pn.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{cMax=+b.dataset.m;sv()});sv();
+  $('mk').onclick=()=>conn(()=>net({t:'create',priv:cPriv,max:cMax,kind:cKind}))}
  else{pn.innerHTML='<div class="row"><input id="cd" maxlength="4" placeholder="CÓDIGO" autocapitalize="characters" autocomplete="off"><button class="gob" id="jn">Entrar</button></div><p>Salas públicas</p><div class="rl" id="rl"></div>';
   const go=()=>{const c=$('cd').value.trim();if(c.length===4)conn(()=>net({t:'join',code:c}));else $('er').textContent='Digite o código de 4 letras.'};
   $('jn').onclick=go;$('cd').onkeydown=e=>{if(e.key==='Enter')go()};fillRooms()}}
@@ -541,12 +541,12 @@ function showSkins(back){inSk=true;let h='<h2>🎨 Escolha sua skin</h2><div cla
  $('sbk').onclick=()=>{inSk=false;back()}}
 /* overlay sem re-animar a cada atualização (evita botões "pulando") */
 function showOv(h){const was=!ovEl.hidden,sc=ovEl.scrollTop;ovEl.innerHTML=h;ovEl.classList.toggle('re',was);ovEl.hidden=false;if(was)ovEl.scrollTop=sc;tClear()}
-function showStart(){inSk=false;leaveAll();showOv('<h2>cubedax</h2><p>Recorde: <b>'+recTxt(rec)+'</b></p><p style="font-size:11px;opacity:.5">build 5</p><button class="gob" id="go">Começar</button><button class="gob alt" id="mpb">Modo multiplayer</button><button class="gob alt" id="skb">🎨 Skin do cubo</button><button class="gob alt" id="cf">⚙ Configurações</button>');
- $('go').onclick=()=>{hideOv();recSave(1);$('xb').hidden=false};$('mpb').onclick=openMP;$('skb').onclick=()=>showSkins(showStart);$('cf').onclick=showCfg}
+function showStart(){inSk=false;leaveAll();showOv('<h2>cubedax</h2><p>Recorde: <b>'+recTxt(rec)+'</b></p><p style="font-size:11px;opacity:.5">build 5</p><button class="gob" id="go">Começar</button><button class="gob" id="rcb">🏁 Modo corrida</button><button class="gob alt" id="mpb">Modo multiplayer</button><button class="gob alt" id="skb">🎨 Skin do cubo</button><button class="gob alt" id="cf">⚙ Configurações</button>');
+ $('go').onclick=()=>{hideOv();recSave(1);$('xb').hidden=false};$('rcb').onclick=()=>{cKind='race';lobTab='create';openMP()};$('mpb').onclick=()=>{cKind='coop';openMP()};$('skb').onclick=()=>showSkins(showStart);$('cf').onclick=showCfg}
 function renderRoom(){if(!room||inSk)return;const me=room.players.find(z=>z.s===mySlot)||{},host=room.host===mySlot,md=MODES[room.mode]||MODES.normal,rc=room.kind==='race',ok=room.players.length>=2&&room.players.every(z=>z.s===room.host||z.ready);
  let h='<h2>Sala <span class="code">'+room.code+'</span></h2><p>'+(room.priv?'🔒 Privada':'🌐 Pública')+' · '+room.players.length+'/'+room.max+' jogadores</p><div class="pl">';
  room.players.forEach(z=>{h+='<div class="pr"><i style="background:'+skinOf(z.skin).c+'"></i><b>'+esc(z.name)+(z.s===mySlot?' (você)':'')+'</b><span>Rec: '+esc(z.rec)+'</span><em>'+(z.s===room.host?'👑 Anfitrião':(z.ready?'✔ Pronto':'…'))+'</em></div>'});
- h+='</div><p><b>'+(rc?'🏁 Corrida':'Cooperativo · '+md.n)+'</b>: '+(rc?room.rt+'s por mapa · vence quem fizer '+room.rp+' ponto'+(room.rp>1?'s':''):md.m+' mapas · '+md.t+'s por mapa')+'</p>';
+ h+='</div>'+(room.kind===undefined?'<p style="color:#b91c1c">⚠ Servidor desatualizado: publique o worker.js novo para usar o modo corrida.</p>':'')+'<p><b>'+(rc?'🏁 Corrida':'Cooperativo · '+md.n)+'</b>: '+(rc?room.rt+'s por mapa · vence quem fizer '+room.rp+' ponto'+(room.rp>1?'s':''):md.m+' mapas · '+md.t+'s por mapa')+'</p>';
  if(host){h+='<div class="row"><button class="gob'+(rc?' alt':'')+'" data-kd="coop">Cooperativo</button><button class="gob'+(rc?'':' alt')+'" data-kd="race">🏁 Corrida</button></div>';
   if(rc)h+='<p>Tempo por mapa (segundos)</p><div class="row"><button class="gob" data-rt="-5">−</button><b style="font-size:26px;min-width:3ch">'+room.rt+'</b><button class="gob" data-rt="5">+</button></div><p>Pontos para vencer</p><div class="row"><button class="gob" data-rp="-1">−</button><b style="font-size:26px;min-width:3ch">'+room.rp+'</b><button class="gob" data-rp="1">+</button></div>';
   else{h+='<div class="row">';for(const k in MODES)h+='<button class="gob'+(MODES[k]===md?'':' alt')+'" data-md="'+k+'">'+MODES[k].n+'</button>';h+='</div>'}}
@@ -686,6 +686,7 @@ function drawReplay(){const R=RPL;if(!R||!R.fr.length)return;const f=R.fr[Math.m
  if(big){ctx.textAlign='center';ctx.fillStyle='#111';ctx.font='bold 14px system-ui,sans-serif';ctx.fillText('Aguardando o fim do replay…',S/2,Y+W+24)}}
 
 /* ===== v4: corrida, replay grande, tela cheia ===== */
+let cKind='coop';
 function rplBusy(){return!!(RPL||rq.length||rpend.length)}
 function rbigNow(){return state==='rover'||state==='won'||(P.length>0&&P.every(q=>!q.alive)&&RP.every(q=>!q.alive))}
 function rendMsg(m){if(!race)return;race.score=m.score||race.score;race.w=m.w;race.over=!!m.over;race.mw=m.mw;race.sent=0;race.shown=0;
