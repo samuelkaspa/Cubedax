@@ -1,5 +1,5 @@
 import html from './index.html';
-// Servidor multiplayer do Cubo Preto (Cloudflare Worker + Durable Object).
+// Servidor multiplayer do cubedax (Cloudflare Worker + Durable Object).
 // Todas as salas vivem em um único Durable Object ("global"): simples e suficiente para um jogo pequeno.
 const CH='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const REL=new Set(['st','door','kn','ek','dead','win','pick']);
@@ -9,7 +9,7 @@ const MODES=new Set(['easy','normal','hard']);
 
 export class Hub{
  constructor(){this.rooms=new Map();this.cs=new Set()}
- add(ws){const c={ws,room:null,s:-1,sub:false,name:'Cubo',rec:'—',skin:'preto',ready:false};this.cs.add(c);return c}
+ add(ws){const c={ws,room:null,s:-1,sub:false,name:'Cubedax',rec:'—',skin:'preto',ready:false};this.cs.add(c);return c}
  send(c,o){try{c.ws.send(JSON.stringify(o))}catch(e){}}
  cast(r,o,ex){for(const c of r.pl)if(c&&c!==ex)this.send(c,o)}
  count(r){return r.pl.filter(Boolean).length}
@@ -34,7 +34,7 @@ export class Hub{
   if(!m||typeof m.t!=='string')return;const r=c.room;
   switch(m.t){
    case'sub':c.sub=!!m.v;if(c.sub)this.send(c,{t:'rooms',list:this.list()});break;
-   case'prof':c.name=clean(m.name,12)||'Cubo';c.rec=clean(m.rec,12)||'—';c.skin=clean(m.skin,10)||'preto';if(r){this.sync(r);this.push()}break;
+   case'prof':c.name=clean(m.name,12)||'Cubedax';c.rec=clean(m.rec,12)||'—';c.skin=clean(m.skin,10)||'preto';if(r){this.sync(r);this.push()}break;
    case'create':{if(r)return;let code;do{code=Array.from({length:4},()=>CH[rnd(CH.length)]).join('')}while(this.rooms.has(code));
     const room={code,priv:!!m.priv,mode:'normal',max:Math.max(2,Math.min(4,+m.max||4)),host:0,started:false,pl:[c],retry:new Set()};
     this.rooms.set(code,room);c.room=room;c.s=0;c.ready=false;this.sync(room);this.push();break}
