@@ -47,6 +47,7 @@ export class Hub{
  msg(c,raw){if(typeof raw!=='string'||raw.length>600)return;let m;try{m=JSON.parse(raw)}catch(e){return}
   if(!m||typeof m.t!=='string')return;const r=c.room;
   switch(m.t){
+   case'ping':break;
    case'sub':c.sub=!!m.v;if(c.sub)this.send(c,{t:'rooms',list:this.list()});break;
    case'prof':c.name=clean(m.name,12)||'Cubedax';c.rec=clean(m.rec,12)||'—';c.skin=clean(m.skin,10)||'preto';if(r){this.sync(r);this.push()}break;
    case'create':{if(r)return;let code;do{code=Array.from({length:4},()=>CH[rnd(CH.length)]).join('')}while(this.rooms.has(code));
@@ -86,7 +87,7 @@ export class GameHub{
  async fetch(req){
   if(req.headers.get('Upgrade')!=='websocket')return new Response('Use WebSocket',{status:426});
   const [cl,sv]=Object.values(new WebSocketPair());sv.accept();const c=this.hub.add(sv);
-  sv.addEventListener('message',e=>this.hub.msg(c,e.data));
+  sv.addEventListener('message',e=>{try{this.hub.msg(c,e.data)}catch(x){console.log('msg error',x&&x.stack)}});
   sv.addEventListener('close',()=>this.hub.drop(c));
   sv.addEventListener('error',()=>this.hub.drop(c));
   return new Response(null,{status:101,webSocket:cl})}

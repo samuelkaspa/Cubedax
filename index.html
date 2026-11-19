@@ -427,10 +427,10 @@ function conn(cb){if(ws&&ws.readyState<=1){ws.readyState===1?cb&&cb():cb&&ws.add
  let u;try{u=window.CUBO_SERVER||((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws')}catch(e){}
  if(!u||location.protocol==='file:'||!/^wss?:\/\/.+/.test(u)){srvErr();return}
  const s=ws=new WebSocket(u);
- s.onopen=()=>{sendProf();cb&&cb()};
+ s.onopen=()=>{sendProf();clearInterval(hb);hb=setInterval(()=>net({t:'ping'}),15000);cb&&cb()};
  s.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}onMsg(m)};
  s.onerror=()=>{if(s===ws&&!room&&!mp)srvErr()};
- s.onclose=()=>{if(s!==ws)return;ws=null;if(room||mp){leaveAll();showOv('<h2>Conexão perdida</h2><button class="gob" id="b">Ok</button>');$('b').onclick=showStart}}}
+ s.onclose=e=>{clearInterval(hb);if(s!==ws)return;ws=null;lastCode=e&&e.code;if(room||mp){leaveAll();showOv('<h2>Conexão perdida</h2><p>Código '+lastCode+'. Se repetir, publique o worker.js e o index.html juntos.</p><button class="gob" id="b">Ok</button>');$('b').onclick=showStart}}}
 function leaveAll(){race=null;MAPS=30;const was=mp||room;if(room)net({t:'leave'});mp=false;RP=[];room=null;clearTimeout(cardTO);const w=ws;ws=null;if(w)try{w.close()}catch(e){}$('xb').hidden=true;if(was){curses={};plan=[];deaths=0;loadMap(0)}}
 function stopGame(){race=null;MAPS=30;mp=false;RP=[];curses={};plan=[];deaths=0;$('xb').hidden=true;loadMap(0);renderRoom()}
 function begin(m){mp=true;plan=m.plan;race=m.kind==='race'?{pts:m.rp,round:0,score:m.score||[0,0,0,0],w:-1,over:false,mw:-1,sent:0,shown:0,ban:''}:null;MAPS=(MODES[room.mode]||MODES.normal).m;curses={};deaths=0;picks={};cardDone=false;voted=null;rtry={n:0,of:0};clearTimeout(cardTO);
@@ -686,7 +686,7 @@ function drawReplay(){const R=RPL;if(!R||!R.fr.length)return;const f=R.fr[Math.m
  if(big){ctx.textAlign='center';ctx.fillStyle='#111';ctx.font='bold 14px system-ui,sans-serif';ctx.fillText('Aguardando o fim do replay…',S/2,Y+W+24)}}
 
 /* ===== v4: corrida, replay grande, tela cheia ===== */
-let cKind='coop';
+let cKind='coop',hb=0,lastCode=0;
 function rplBusy(){return!!(RPL||rq.length||rpend.length)}
 function rbigNow(){return state==='rover'||state==='won'||(P.length>0&&P.every(q=>!q.alive)&&RP.every(q=>!q.alive))}
 function rendMsg(m){if(!race)return;race.score=m.score||race.score;race.w=m.w;race.over=!!m.over;race.mw=m.mw;race.sent=0;race.shown=0;
