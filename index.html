@@ -188,7 +188,7 @@ function loadMap(n){mapN=n;build(n);mapBig=!(race&&race.bt)&&(MW>=100||MH>=90);r
 const CURSES=[
  {id:'pulo',n:'Pulo Fraco',s:'\u25BC',c:'#d98e04',d:t=>'Pulo '+7*t+'% mais fraco'},
  {id:'lento',n:'Peso',s:'\u25CF',c:'#3b82f6',d:t=>'Você '+10*t+'% mais lento'},
- {id:'osso',n:'Osso',s:'\u2620',c:'#a8a29e',d:t=>'A cada 3s um osso sobe do chão embaixo de você (aviso vermelho por 2s, osso dura 1s). Largura nível '+t},
+ {id:'osso',n:'Osso',s:'\u2620',c:'#a8a29e',d:t=>'A cada 3s um osso sobe do chão embaixo de você (aviso vermelho por 1s, osso dura 1s). Largura nível '+t+(t>=2?'. Nível II+: também sobe um osso na sua frente':'')},
  {id:'tosse',n:'Tosse',s:'\u2622',c:'#84cc16',d:t=>'A cada 5s você tosse e é jogado para trás (força '+t+')'},
  {id:'aceleracao',n:'Aceleração',s:'\u27A4',c:'#f97316',d:t=>'Você demora '+[0,.3,.5,.8][t]+'s para chegar na velocidade máxima ao começar a andar (parar é instantâneo)'},
  {id:'tropeco',n:'Tropeço',s:'\u2307',c:'#0ea5e9',d:t=>'A cada 8s você tropeça e recebe um impulso para frente (força '+t+')'},
@@ -331,7 +331,7 @@ function upd(q){
  q.coy=q.g?Math.max(2,9-3*tier('borda')):Math.max(0,q.coy-1);q.buf=k.jp?7:Math.max(0,q.buf-1);k.jp=false;if(q.wd>0)q.wd--;
  const tq=tier('inquieto');q.bang=0;if(tq&&started&&!dtm&&cdn<=0){const per=[0,300,210,150][tq],ph=fr%per;if(ph>=per-120)q.bang=per-ph;if(q.g&&ph<6)q.buf=Math.max(q.buf,7)}
  if(dir&&q.wd<=0)q.face=dir;
- {const ta=tier('aceleracao');q.am=ta?(dir?Math.min(1,(q.am||0)+1/[0,18,30,48][ta]):0):1;const act=started&&!dtm&&cdn<=0;
+ {const ta=tier('aceleracao');q.am=ta?(dir?(dir!==q.ld?0:Math.min(1,(q.am||0)+1/[0,18,30,48][ta])):0):1;if(dir)q.ld=dir;const act=started&&!dtm&&cdn<=0;
   if(tier('tosse')&&act){if(q.cof>0)q.cof--;if((q.tc=(q.tc|0)+1)>=300){q.tc=0;cough(q)}}
   if(tier('tropeco')&&act){if(q.trp>0)q.trp--;if((q.tt=(q.tt|0)+1)>=480){q.tt=0;trip(q)}}}
  const vx=q.wd>0?q.wj*SP*1.1:(tier('gelo')?(q.hv=(q.hv||0)+(dir*SP*q.am-(q.hv||0))*[0,.1,.055,.03][tier('gelo')]):dir*SP*q.am),wl=!q.g&&wallAt(q,-1),wr=!q.g&&wallAt(q,1);
@@ -471,24 +471,25 @@ function bakeBG(){if(BG)return BG;if(MW*T*MH*T>9e6)return null;const c=document.
   else if(v==='p'){x.fillStyle='#8a8f98';x.fillRect(px,py,T+1,11);x.fillStyle='#b9bec7';x.fillRect(px,py,T+1,3);x.fillStyle='#6b7280';for(let k=4;k<T;k+=8)x.fillRect(px+k,py+11,3,4)}}
  return BG=c}
 /* osso */
-const boneH=a=>{const u=a-120;if(u<0||u>=60)return 0;const e=v=>v*v*(3-2*v);return 84*(u<10?e(u/10):u<46?1:e((60-u)/14))};
-function boneSpawn(q,t){const cx=q.x+12,col=fl(cx/T);let row=fl((q.y+q.s-1)/T);while(row<MH&&!solm(col,row))row++;if(row>=MH||row*T-(q.y+q.s)>5*T)return;
+const boneH=a=>{const u=a-60;if(u<0||u>=60)return 0;const e=v=>v*v*(3-2*v);return 84*(u<10?e(u/10):u<46?1:e((60-u)/14))};
+function boneSpawn(q,t){boneAt(q,q.x+12,t);if(t>=2)boneAt(q,q.x+12+(q.face||1)*(26+14*t+36),t)}
+function boneAt(q,cx,t){const col=fl(cx/T);if(col<1||col>=MW-1)return;let row=fl((q.y+q.s-1)/T);while(row<MH&&!solm(col,row))row++;if(row>=MH||row*T-(q.y+q.s)>5*T)return;
  const b={x:cx,y:row*T,w:26+14*t,a:0,loc:1};BON.push(b);if(mp)net({t:'bo',x:Math.round(cx),y:b.y,w:b.w,a:0})}
 function boneTick(){const t=tier('osso'),act=started&&!dtm&&cdn<=0;
  if(t&&act&&bnc++%180===0&&p&&p.alive&&p.win===undefined)boneSpawn(p,t);
  for(let i=BON.length-1;i>=0;i--){const b=BON[i];b.a++;
-  if(b.a===120){burst(b.x,b.y,10,['#f3ecd8','#bbb'],3,18,.12,3);shk=Math.max(shk,4);snd(200,.1,'triangle',.05,90)}
-  if(b.a>=180){BON.splice(i,1);continue}
-  if(b.loc&&b.a>=122){const h=boneH(b.a);if(h>8)for(const q of P)if(q.alive&&q.win===undefined&&q.x+q.s>b.x-b.w/2+5&&q.x<b.x+b.w/2-5&&q.y+q.s>b.y-h+8&&q.y<b.y){die(q,0,0,0,b);break}}}
+  if(b.a===60){burst(b.x,b.y,10,['#f3ecd8','#bbb'],3,18,.12,3);shk=Math.max(shk,4);snd(200,.1,'triangle',.05,90)}
+  if(b.a>=120){BON.splice(i,1);continue}
+  if(b.loc&&b.a>=62){const h=boneH(b.a);if(h>8)for(const q of P)if(q.alive&&q.win===undefined&&q.x+q.s>b.x-b.w/2+5&&q.x<b.x+b.w/2-5&&q.y+q.s>b.y-h+8&&q.y<b.y){die(q,0,0,0,b);break}}}
  for(const q of P.concat(RP)){if(q.imp)q.imp.t++;if(q.dzy>0)q.dzy--}}
-function impR(q,m){const b=BON.find(z=>Math.abs(z.x-m.lx)<3&&Math.abs(z.y-m.lv)<3)||{x:m.lx,y:m.lv,w:40,a:130,loc:0};q.imp={b,ox:q.x-b.x,a0:b.a,t:0};burst(q.x+12,q.y+12,14,['#e11d2e','#fff',q.col||'#111'],5,26,.15,4);snd(150,.25,'sawtooth',.04,50)}
+function impR(q,m){const b=BON.find(z=>Math.abs(z.x-m.lx)<3&&Math.abs(z.y-m.lv)<3)||{x:m.lx,y:m.lv,w:40,a:70,loc:0};q.imp={b,ox:q.x-b.x,a0:b.a,t:0};burst(q.x+12,q.y+12,14,['#e11d2e','#fff',q.col||'#111'],5,26,.15,4);snd(150,.25,'sawtooth',.04,50)}
 function drawBone(b){const w=b.w;ctx.save();
- if(b.a<120){const f=Math.min(1,b.a/20),pu=.35+.35*Math.abs(Math.sin(b.a*(.12+b.a/700)));ctx.fillStyle='#e11d2e';ctx.globalAlpha=Math.min(1,pu*f+.15);ctx.fillRect(b.x-w/2-3,b.y-4,w+6,4);ctx.globalAlpha=.16*f;ctx.fillRect(b.x-w/2,b.y-70,w,70);ctx.globalAlpha=Math.min(1,pu+.3);ctx.font='bold 16px system-ui,sans-serif';ctx.textAlign='center';ctx.fillText('!',b.x,b.y-10);ctx.restore();return}
+ if(b.a<60){const f=Math.min(1,b.a/20),pu=.35+.35*Math.abs(Math.sin(b.a*(.12+b.a/700)));ctx.fillStyle='#e11d2e';ctx.globalAlpha=Math.min(1,pu*f+.15);ctx.fillRect(b.x-w/2-3,b.y-4,w+6,4);ctx.globalAlpha=.16*f;ctx.fillRect(b.x-w/2,b.y-70,w,70);ctx.globalAlpha=Math.min(1,pu+.3);ctx.font='bold 16px system-ui,sans-serif';ctx.textAlign='center';ctx.fillText('!',b.x,b.y-10);ctx.restore();return}
  const h=boneH(b.a);if(h<=0){ctx.restore();return}
  const sw=w*.42,ty=b.y-h;ctx.fillStyle='#f3ecd8';ctx.strokeStyle='#b8ad8c';ctx.lineWidth=2;ctx.fillRect(b.x-sw/2,ty+6,sw,h-6);ctx.strokeRect(b.x-sw/2,ty+6,sw,h-6);
  for(const s of[-1,1]){ctx.beginPath();ctx.arc(b.x+s*w*.2,ty+7,w*.2,0,7);ctx.fill();ctx.stroke()}ctx.restore()}
-function drawImp(q){const im=q.imp,b=im.b,a=im.a0+im.t;if(a>=235)return;const h=boneH(a),by=b.y-Math.max(0,h-8),cx=b.x+im.ox+12,up=h>8;
- ctx.save();ctx.globalAlpha=a>205?1-(a-205)/30:1;ctx.translate(cx,by);ctx.rotate(up?.15*Math.sin(a*.3):.12);if(!up)ctx.scale(1.15,.9);
+function drawImp(q){const im=q.imp,b=im.b,a=im.a0+im.t;if(a>=175)return;const h=boneH(a),by=b.y-Math.max(0,h-8),cx=b.x+im.ox+12,up=h>8;
+ ctx.save();ctx.globalAlpha=a>145?1-(a-145)/30:1;ctx.translate(cx,by);ctx.rotate(up?.15*Math.sin(a*.3):.12);if(!up)ctx.scale(1.15,.9);
  ctx.fillStyle=q.col||'#111';ctx.fillRect(-12,-24,24,24);ctx.strokeStyle='#fff';ctx.lineWidth=2;
  for(const ox of[-5,5]){ctx.beginPath();ctx.moveTo(ox-3,-18);ctx.lineTo(ox+3,-12);ctx.moveTo(ox+3,-18);ctx.lineTo(ox-3,-12);ctx.stroke()}ctx.restore()}
 /* tosse e tropeço */
