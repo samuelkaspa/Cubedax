@@ -86,7 +86,7 @@ class Hub{
     m.s=c.s;this.cast(r,m,c)}}}
 }
 
-export class GameHub{
+class GameHub{
  constructor(){this.hub=new Hub()}
  async fetch(req){
   if(req.headers.get('Upgrade')!=='websocket')return new Response('Use WebSocket',{status:426});
@@ -96,6 +96,8 @@ export class GameHub{
   sv.addEventListener('error',()=>this.hub.drop(c));
   return new Response(null,{status:101,webSocket:cl})}
 }
+
+export { GameHub };
 
 export default{
  async fetch(req,env){
