@@ -3,7 +3,7 @@
 Estrutura do repositório (tudo na RAIZ do repo):
 wrangler.jsonc
 package.json
-worker.js
+src/index.js
 public/index.html
 
 Deploy: npx wrangler deploy
