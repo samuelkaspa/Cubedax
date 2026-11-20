@@ -1,6 +1,6 @@
 {
   "name": "cubedax",
-  "main": "src/index.js",
+  "main": "worker.js",
   "compatibility_date": "2025-01-01",
   "durable_objects": {
     "bindings": [{ "name": "HUB", "class_name": "GameHub" }]
