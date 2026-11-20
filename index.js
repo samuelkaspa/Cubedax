@@ -1,4 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
+import page from "./index.html";
 
 // Servidor multiplayer do cubedax (Cloudflare Worker + Durable Object).
 // Todas as salas vivem em um único Durable Object ("global"): simples e suficiente para um jogo pequeno.
@@ -113,12 +114,16 @@ export class GameHub extends DurableObject {
   }
 }
 
+// O próprio Worker serve o jogo (index.html embutido) e o WebSocket em /ws.
+// Não depende de pasta "public" nem de binding de assets.
 export default {
   async fetch(req, env) {
     const u = new URL(req.url);
     if (u.pathname === '/ws') {
       return env.HUB.get(env.HUB.idFromName('global')).fetch(req);
     }
-    return env.ASSETS.fetch(req);
+    return new Response(page, {
+      headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' },
+    });
   },
 };
