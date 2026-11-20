@@ -1,0 +1,6 @@
+{
+  "name": "cubedax",
+  "private": true,
+  "type": "module",
+  "devDependencies": { "wrangler": "^4" }
+}
