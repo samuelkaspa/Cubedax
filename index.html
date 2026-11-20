@@ -455,7 +455,7 @@ function conn(cb){if(ws&&ws.readyState<=1){ws.readyState===1?cb&&cb():cb&&ws.add
  s.onopen=()=>{sendProf();clearInterval(hb);hb=setInterval(()=>net({t:'ping'}),15000);cb&&cb()};
  s.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}onMsg(m)};
  s.onerror=()=>{if(s===ws&&!room&&!mp)srvErr()};
- s.onclose=e=>{clearInterval(hb);if(s!==ws)return;ws=null;lastCode=e&&e.code;if(room||mp){leaveAll();showOv('<h2>Conexão perdida</h2><p>Código '+lastCode+'. Se repetir, publique o worker.js e o index.html juntos.</p><button class="gob" id="b">Ok</button>');$('b').onclick=showStart}}}
+ s.onclose=e=>{clearInterval(hb);if(s!==ws)return;ws=null;lastCode=e&&e.code;if(room||mp){leaveAll();showOv('<h2>Conexão perdida</h2><p>Código '+lastCode+'. Se repetir, o servidor (Worker) não está publicado: rode npm run deploy.</p><button class="gob" id="b">Ok</button>');$('b').onclick=showStart}}}
 function leaveAll(){race=null;MAPS=30;const was=mp||room;if(room)net({t:'leave'});mp=false;RP=[];room=null;clearTimeout(cardTO);const w=ws;ws=null;if(w)try{w.close()}catch(e){}$('xb').hidden=true;if(was){curses={};plan=[];deaths=0;loadMap(0)}}
 function stopGame(){race=null;MAPS=30;mp=false;RP=[];curses={};plan=[];deaths=0;$('xb').hidden=true;loadMap(0);renderRoom()}
 function begin(m){mp=true;plan=m.plan;race=(m.kind==='race'||m.kind==='battle')?{pts:m.rp,round:0,score:m.score||[0,0,0,0],w:-1,over:false,mw:-1,sent:0,shown:0,ban:'',bt:m.kind==='battle'}:null;MAPS=(MODES[room.mode]||MODES.normal).m;curses={};deaths=0;picks={};cardDone=false;voted=null;rtry={n:0,of:0};clearTimeout(cardTO);

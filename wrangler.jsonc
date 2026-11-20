@@ -8,11 +8,7 @@
     "run_worker_first": ["/ws"]
   },
   "durable_objects": {
-    "bindings": [
-      { "name": "HUB", "class_name": "GameHub" }
-    ]
+    "bindings": [{ "name": "HUB", "class_name": "GameHub" }]
   },
-  "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["GameHub"] }
-  ]
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GameHub"] }]
 }

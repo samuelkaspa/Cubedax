@@ -95,7 +95,7 @@ export class GameHub extends DurableObject {
   }
 
   async fetch(req) {
-    if (req.headers.get('Upgrade') !== 'websocket') {
+    if ((req.headers.get('Upgrade') || '').toLowerCase() !== 'websocket') {
       return new Response('Use WebSocket', { status: 426 });
     }
     const pair = new WebSocketPair();
@@ -106,8 +106,9 @@ export class GameHub extends DurableObject {
     sv.addEventListener('message', (e) => {
       try { this.hub.msg(c, e.data); } catch (x) { console.log('msg error', x && x.stack); }
     });
-    sv.addEventListener('close', () => this.hub.drop(c));
-    sv.addEventListener('error', () => this.hub.drop(c));
+    const gone = () => { try { this.hub.drop(c); } catch (x) { console.log('drop error', x && x.stack); } };
+    sv.addEventListener('close', gone);
+    sv.addEventListener('error', gone);
     return new Response(null, { status: 101, webSocket: cl });
   }
 }
