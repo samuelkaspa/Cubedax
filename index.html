@@ -481,6 +481,7 @@ function onMsg(m){const q=m.s!==undefined?RP.find(z=>z.s===m.s):null;switch(m.t)
  case'pick':picks[m.s]=m.id;cardVotes();hostCheck();break;
  case'cardres':applyCard(m.id);break;
  case'hit':if(m.to===mySlot&&p&&p.alive&&p.win===undefined&&!(p.kbc>0)){p.kx=m.kx;p.vy=m.ky;p.stn=m.far?30:20;p.dsh=0;p.dcd=m.far?70:25;p.g=false;p.kbc=12;p.sx=.7;p.sy=1.3;hitFx(p.x+12,p.y+12,m.far)}break;
+ case'stomp':stompFx(m.x,m.y,m.c);if(m.to===mySlot&&p&&p.alive&&p.win===undefined){p.sx=1.45;p.sy=.55;burst(p.x+12,p.y+4,12,['#fff',p.col||'#111','#f5b800'],4,20,.15,4);shk=Math.max(shk,8)}break;
  case'retry':rtry={n:m.n,of:m.of};break;
  case'met':if(mp&&started&&cdn<=0&&!(room&&room.host===mySlot)){MET.push({x:m.x,y:m.y,d:0,w:46,vy:0,big:m.b?1:0});if(!m.n)snd(260,.3,'sawtooth',.03,90)}break;
  case'rend':rendMsg(m);break;
@@ -593,7 +594,9 @@ function cardVotes(){const v=$('vt');if(!room)return;const cnt={};for(const s in
 function stompChk(){if(race&&race.bt)return;for(const q of P){if(!q.alive||q.win!==undefined||!q.dive)continue;
  for(const r of RP){if(!r.alive||r.win!==undefined)continue;
   if(q.x+q.s-3>r.x&&q.x+3<r.x+24&&q.pb<=r.y+10&&q.y+q.s>=r.y+2&&q.y+q.s<=r.y+30){q.y=r.y-q.s;q.vy=-15.5;q.dive=0;q.g=false;q.coy=0;q.sx=.7;q.sy=1.5;
-   burst(q.x+12,q.y+24,16,['#fff',q.col||'#111','#f5b800'],5,22,.15,4);rings.push({x:q.x+12,y:q.y+24,r:4,l:22,c:'#f5b800'});snd(260,.18,'square',.06,900);break}}}}
+   stompFx(q.x+12,q.y+24,q.col);net({t:'stomp',x:Math.round(q.x+12),y:Math.round(q.y+24),to:r.s,c:q.col||'#111'});break}}}}
+/* efeito do pisão: aparece para os dois (e entra no replay, pois usa as mesmas partículas/anéis) */
+function stompFx(x,y,col){burst(x,y,16,['#fff',col||'#111','#f5b800'],5,22,.15,4);burst(x,y,10,['#bbb','#777'],3,18,.1,3);rings.push({x,y,r:4,l:22,c:'#f5b800'});rings.push({x,y,r:0,l:14,c:'#fff'});shk=Math.max(shk,6);snd(260,.18,'square',.06,900)}
 /* campo de proteção (portas) e alavanca (botões) */
 const lvA={};
 function drawField(c,x,y,px,py){const col=dcol[c],op=open[c],up=g[y-1]&&g[y-1][x]!==c,dn=!(g[y+1]&&g[y+1][x]===c);ctx.save();
@@ -676,7 +679,7 @@ function drawReplay(R0){const R=R0||RPL;if(!R||!R.fr.length)return;const f=R.fr[
  for(const b of f.kn)if(Math.abs(b.x*T-R.px)<rad+80&&Math.abs(b.y*T-R.py)<rad+80){drawKnight(b);drawSword(b)}
  for(const e of f.en)if(Math.abs(e.x-R.px)<rad+80&&Math.abs(e.y-R.py)<rad+80)drawEn(e);
  if(f.mt)drawMet(f.mt);
- for(const q of f.pl){if(!q.alive){if(q.mf!==undefined)drawMelt(q);else if(q.cut!==undefined)drawCut(q);continue}if(q.win!==undefined)continue;drawCubeQ(q)}
+ for(const q of f.pl){if(!q.alive){if(q.mf!==undefined)drawMelt(q);else if(q.cut!==undefined)drawCut(q);continue}if(q.win!==undefined)continue;drawCubeQ(q);if(q.nm){ctx.save();ctx.fillStyle=q.col||'#111';ctx.font='bold '+(big?13:11)/z+'px system-ui,sans-serif';ctx.textAlign='center';ctx.lineWidth=3/z;ctx.strokeStyle='rgba(255,255,255,.85)';ctx.strokeText(q.nm,q.x+12,q.y-6);ctx.fillText(q.nm,q.x+12,q.y-6);ctx.restore()}}
  for(const r of f.rg||[]){ctx.globalAlpha=Math.max(0,r[3]/22);ctx.strokeStyle=r[4];ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(r[0],r[1],r[2]*1.4,r[2]*.5,0,0,7);ctx.stroke()}
  for(const a of f.pt||[]){if(Math.abs(a[0]-R.px)>rad||Math.abs(a[1]-R.py)>rad)continue;ctx.globalAlpha=Math.max(0,a[2]/a[3]);ctx.fillStyle=a[4];ctx.fillRect(a[0]-a[5]/2,a[1]-a[5]/2,a[5],a[5])}
  ctx.globalAlpha=1;
@@ -961,7 +964,7 @@ const RDB=(()=>{let db=null;const mem=new Map();
  return{all:()=>has?tx('readonly',s=>s.getAll()):Promise.resolve([...mem.values()]),put:o=>has?tx('readwrite',s=>s.put(o)):(mem.set(o.id,o),Promise.resolve()),del:id=>has?tx('readwrite',s=>s.delete(id)):(mem.delete(id),Promise.resolve())}})();
 let RLIST=[];
 const nrm=t=>String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''),
- fmtD=ts=>{try{return new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}catch(e){return''}};
+ fmtD=ts=>{try{return new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return''}};
 function saveRpl(){const R=lastRp;if(!R||R.saved)return;R.saved=true;
  const d={...R,fr:R.fr.map(f=>({...f,pt:(f.pt||[]).slice(-120)})),i:0};delete d.saved;
  RDB.put({id:Date.now()+'-'+Math.random().toString(36).slice(2,6),name:((R.nm||'Cubo')+' · '+(R.lb||'Mapa')).slice(0,40),ts:Date.now(),data:d}).then(()=>toast('Replay salvo! Veja em Replays.')).catch(()=>{R.saved=false;toast('Não foi possível salvar o replay')})}
@@ -971,21 +974,41 @@ function rsvPos(){const b=$('rsv');if(!b)return;if(RPL){lastRp=RPL;RPL.t0=fr}con
  b.hidden=false;b.disabled=!!R.saved;b.textContent=R.saved?'✔ Replay salvo':'💾 Salvar replay';
  b.style.left=(rc.left+4+(big?(S-bw)/2:X)*k)+'px';b.style.top=(rc.top+4+Y*k)+'px';b.style.width=bw*k+'px';b.style.fontSize=Math.max(11,13*k)+'px'}
 $('rsv').onclick=saveRpl;
-function showReplays(){showOv('<h2>🎬 Replays</h2><input id="rsq" type="search" placeholder="Pesquisar replays..." autocomplete="off" style="text-transform:none;width:min(420px,90vw)"><div class="rl rlr" id="rls"><p>Carregando…</p></div><button class="gob alt" id="rbk">Voltar</button>');
+function showReplays(){showOv('<h2>🎬 Replays</h2><p id="rcn" style="font-size:13px"></p><input id="rsq" type="search" placeholder="Pesquisar replays..." autocomplete="off" style="text-transform:none;width:min(420px,90vw)"><div class="rl rlr" id="rls"><p>Carregando…</p></div><button class="gob alt" id="rbk">Voltar</button>');
  $('rbk').onclick=showStart;$('rsq').oninput=renderRl;
  $('rls').onclick=e=>{const b=e.target.closest('button[data-a]');if(!b)return;const id=b.dataset.id,a=b.dataset.a,r=RLIST.find(x=>x.id===id);if(!r)return;
-  if(a==='play')playRpl(r);
+  if(a==='play')playRpl(r);else if(a==='dl')recordRpl(r);
   else if(a==='ren'){const n=prompt('Novo nome do replay',r.name);if(n===null)return;const nn=n.replace(/[<>]/g,'').trim().slice(0,40);if(!nn)return;r.name=nn;renderRl();RDB.put(r).catch(()=>{})}
   else if(a==='del'){if(confirm('Apagar o replay "'+r.name+'"?')){RLIST=RLIST.filter(x=>x.id!==id);renderRl();RDB.del(id).catch(()=>{})}}};
  RDB.all().then(a=>{RLIST=(a||[]).sort((x,y)=>y.ts-x.ts);renderRl()}).catch(()=>{const l=$('rls');if(l)l.innerHTML='<p>Não foi possível abrir os replays salvos neste navegador.</p>'})}
-function renderRl(){const L=$('rls');if(!L)return;const q=nrm(($('rsq')||{}).value||''),a=RLIST.filter(r=>!q||nrm(r.name).includes(q)||nrm(fmtD(r.ts)).includes(q));
- L.innerHTML=a.length?a.map(r=>'<div class="ri"><div class="nm"><b>'+esc(r.name)+'</b><small>'+esc(fmtD(r.ts))+(r.data&&r.data.lb?' · '+esc(r.data.lb):'')+'</small></div><button class="pl" data-a="play" data-id="'+r.id+'" title="Assistir">▶</button><button data-a="ren" data-id="'+r.id+'" title="Renomear">✎</button><button data-a="del" data-id="'+r.id+'" title="Apagar">🗑</button></div>').join(''):'<p>'+(RLIST.length?'Nenhum replay encontrado.':'Nenhum replay salvo ainda. Quando você morrer, toque em “💾 Salvar replay”.')+'</p>'}
+function renderRl(){const L=$('rls');if(!L)return;setTimeout(rcThumbs,0);const q=nrm(($('rsq')||{}).value||''),a=RLIST.filter(r=>!q||nrm(r.name).includes(q)||nrm(fmtD(r.ts)).includes(q));
+ L.innerHTML=a.length?a.map(rcHtml).join(''):'<p>'+(RLIST.length?'Nenhum replay encontrado.':'Nenhum replay salvo ainda. Quando você morrer, toque em “💾 Salvar replay”.')+'</p>'}
 let rvRec=null;
 function playRpl(r){const d=r.data;d.i=0;d.px=d.cx;d.py=d.cy;rview=d;rvRec=r;hideOv();$('rvb').hidden=false;document.body.classList.add('rvw');$('rsv').hidden=true}
-function closeRV(){rview=null;rvRec=null;$('rvb').hidden=true;document.body.classList.remove('rvw');showReplays()}
+function closeRV(){if(recOn&&!recOn.fin){recOn.fin=1;recOn.cancel=1;try{recOn.rec.stop()}catch(e){}}rview=null;rvRec=null;$('rvb').hidden=true;$('rvr').hidden=false;document.body.classList.remove('rvw');showReplays()}
 $('rvx').onclick=closeRV;$('rvr').onclick=()=>{if(rview){rview.i=0;rview.px=rview.cx;rview.py=rview.cy}};
 function drawRV(){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.drawImage(PAPER,0,0,S,S);drawReplay(rview);
  ctx.fillStyle='#111';ctx.textAlign='center';ctx.font='bold 16px system-ui,sans-serif';ctx.fillText(rvRec?rvRec.name:'Replay',S/2,84);
- const tot=rview.fr.length+30,u=Math.min(1,rview.i/tot);ctx.fillStyle='rgba(17,17,17,.15)';ctx.fillRect((S-380)/2,500,380,6);ctx.fillStyle='#e11d2e';ctx.fillRect((S-380)/2,500,380*u,6)}
+ const tot=rview.fr.length+30,u=Math.min(1,rview.i/tot);ctx.fillStyle='rgba(17,17,17,.15)';ctx.fillRect((S-380)/2,500,380,6);ctx.fillStyle='#e11d2e';ctx.fillRect((S-380)/2,500,380*u,6);
+ if(recOn&&!recOn.fin&&rview&&rview.i>=rview.fr.length+30){recOn.fin=1;setTimeout(()=>{try{recOn.rec.stop()}catch(e){}closeRV()},400)}}
+/* ===== lista de replays mais bonita + exportar MP4 ===== */
+document.head.appendChild(Object.assign(document.createElement('style'),{textContent:'.rlr{width:min(540px,100%)!important;max-height:58vh!important;gap:10px!important}.rc{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;border:2px solid #111;background:#fff;text-align:left;box-shadow:0 6px 16px -10px #000}.rc .th{width:56px;height:60px;border-radius:10px;background:linear-gradient(#f4f1ea,#e3ded2);border:1.5px solid #111;flex:none}.rc .nm{flex:1;min-width:140px;display:flex;flex-direction:column;gap:3px}.rc .nm b{font-size:16px;line-height:1.2;word-break:break-word}.rc .nm small{font-size:12px;opacity:.72}.rc .ra{display:flex;gap:6px;width:100%}.rc .ra button{font:inherit;font-weight:700;font-size:13px;padding:9px 10px;border-radius:9px;border:2px solid #111;background:#fff;color:#111;cursor:pointer;flex:1;min-width:0;white-space:nowrap}.rc .ra button.bp{background:#111;color:#fff;flex:1.5}.rc .ra button.dl{background:#e11d2e;border-color:#e11d2e;color:#fff;flex:1.2}.rc .ra button:disabled{opacity:.5}'}));
+let recOn=null;
+const relT=ts=>{const s=(Date.now()-ts)/1000;return s<60?'agora há pouco':s<3600?'há '+fl(s/60)+' min':s<86400?'há '+fl(s/3600)+' h':s<604800?'há '+fl(s/86400)+' d':''};
+const rcHtml=r=>{const d=r.data||{},sec=(((d.fr||[]).length+30)/60).toFixed(1),inf=[d.lb?'🗺 '+esc(d.lb):'',d.nm?'☠ '+esc(d.nm):'','⏱ '+sec+'s'].filter(Boolean).join(' · ');
+ return'<div class="rc"><canvas class="th" width="56" height="60" data-id="'+r.id+'"></canvas><div class="nm"><b>'+esc(r.name)+'</b><small>📅 '+esc(fmtD(r.ts))+(relT(r.ts)?' · '+relT(r.ts):'')+'</small><small>'+inf+'</small></div><div class="ra"><button class="bp" data-a="play" data-id="'+r.id+'">▶ Assistir</button><button class="dl" data-a="dl" data-id="'+r.id+'">⬇ MP4</button><button data-a="ren" data-id="'+r.id+'" title="Renomear">✎</button><button data-a="del" data-id="'+r.id+'" title="Apagar">🗑</button></div></div>'};
+function rcThumbs(){const n=$('rcn');if(n)n.textContent=RLIST.length+(RLIST.length===1?' replay salvo':' replays salvos');
+ document.querySelectorAll('#rls canvas.th').forEach(cn=>{const r=RLIST.find(x=>x.id===cn.dataset.id);if(!r)return;const d=r.data||{},f=d.fr&&d.fr[0],q=f&&f.pl.find(z=>z.key===d.key);cubeAt(cn.getContext('2d'),(q&&q.sk)||{c:(q&&q.col)||'#111'},28,52,1.05)})}
+function recordRpl(r){if(recOn)return;
+ if(typeof MediaRecorder==='undefined'||!cv.captureStream){alert('Este navegador não consegue exportar vídeo.');return}
+ const mt=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m=>MediaRecorder.isTypeSupported(m));
+ if(!mt){alert('Este navegador não consegue exportar vídeo.');return}
+ let mr;try{mr=new MediaRecorder(cv.captureStream(60),{mimeType:mt,videoBitsPerSecond:5000000})}catch(e){alert('Não foi possível iniciar a gravação.');return}
+ const ch=[],st={rec:mr,fin:0,cancel:0};
+ mr.ondataavailable=e=>{if(e.data&&e.data.size)ch.push(e.data)};
+ mr.onstop=()=>{recOn=null;if(st.cancel)return;const ext=mt.startsWith('video/mp4')?'mp4':'webm',u=URL.createObjectURL(new Blob(ch,{type:mt.split(';')[0]})),a=document.createElement('a');
+  a.href=u;a.download=((r.name||'replay').replace(/[^\w\-]+/g,'_')||'replay')+'.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000);
+  if(ext==='webm')setTimeout(()=>alert('Seu navegador só gera WebM (não MP4). O vídeo foi baixado em .webm.'),300)};
+ recOn=st;playRpl(r);$('rvr').hidden=true;mr.start()}
 </script>
 </body></html>
