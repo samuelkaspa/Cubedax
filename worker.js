@@ -5,7 +5,7 @@ import page from "./index.html";
 
 const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 // mensagens do jogador que o servidor apenas repassa aos outros
-const RELAY = new Set(["st", "door", "kn", "ek", "dead", "win", "pick", "hit", "met", "stomp"]);
+const RELAY = new Set(["st", "door", "kn", "ek", "dead", "win", "pick", "hit", "met", "stomp", "bo", "stun"]);
 const MODES = new Set(["easy", "normal", "hard"]);
 const KINDS = new Set(["coop", "race", "battle"]);
 const isRace = (k) => k === "race" || k === "battle";
@@ -61,25 +61,25 @@ class Hub {
   }
 
   // ---------- mapas ----------
-  // 10 tipos de mapa: cada ciclo de 10 usa todos os tipos, em ordem embaralhada
+  // 15 tipos de mapa: cada ciclo de 15 usa todos os tipos, em ordem embaralhada
   plan() {
     const out = [];
     let last = -1;
     while (out.length < 30) {
-      const a = [...Array(10).keys()];
-      for (let i = 9; i > 0; i--) {
+      const a = [...Array(15).keys()];
+      for (let i = 14; i > 0; i--) {
         const j = rnd(i + 1);
         [a[i], a[j]] = [a[j], a[i]];
       }
       if (a[0] === last) [a[0], a[1]] = [a[1], a[0]];
-      last = a[9];
+      last = a[14];
       for (const t of a) out.push({ t, s: rnd(1e6) });
     }
     return out.slice(0, 30);
   }
   one(r) {
     let t;
-    do { t = rnd(10); } while (t === r.lt);
+    do { t = rnd(15); } while (t === r.lt);
     r.lt = t;
     return { t, s: rnd(1e6) };
   }
