@@ -5,7 +5,7 @@ import page from "./index.html";
 
 const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 // mensagens do jogador que o servidor apenas repassa aos outros
-const RELAY = new Set(["st", "door", "kn", "ek", "dead", "win", "pick", "hit", "met"]);
+const RELAY = new Set(["st", "door", "kn", "ek", "dead", "win", "pick", "hit", "met", "stomp"]);
 const MODES = new Set(["easy", "normal", "hard"]);
 const KINDS = new Set(["coop", "race", "battle"]);
 const isRace = (k) => k === "race" || k === "battle";
@@ -22,7 +22,7 @@ class Hub {
 
   // ---------- utilidades ----------
   add(ws) {
-    const c = { ws, room: null, s: -1, sub: false, name: "Cubedax", rec: "—", skin: "preto", ready: false };
+    const c = { ws, room: null, s: -1, sub: false, name: "Cubedax", rec: "—", recs: { easy: "—", normal: "—", hard: "—" }, skin: "preto", ready: false };
     this.clients.add(c);
     return c;
   }
@@ -47,7 +47,7 @@ class Hub {
   view(r) {
     const players = [];
     r.pl.forEach((c, s) => {
-      if (c) players.push({ s, name: c.name, rec: c.rec, skin: c.skin, ready: c.ready });
+      if (c) players.push({ s, name: c.name, rec: c.rec, recs: c.recs, skin: c.skin, ready: c.ready });
     });
     return {
       code: r.code, priv: r.priv, mode: r.mode, kind: r.kind, rt: r.rt, rp: r.rp,
@@ -213,6 +213,7 @@ class Hub {
       case "prof":
         c.name = clean(m.name, 12) || "Cubedax";
         c.rec = clean(m.rec, 12) || "—";
+        for (const k of MODES) c.recs[k] = clean(m.recs && m.recs[k], 12) || "—";
         c.skin = clean(m.skin, 10) || "preto";
         if (r) { this.sync(r); this.push(); }
         break;
