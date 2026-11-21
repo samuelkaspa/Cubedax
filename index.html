@@ -502,7 +502,7 @@ function drawImp(q){const im=q.imp,b=im.b,a=im.a0+im.t;if(a>=175)return;const h=
  ctx.fillStyle=q.col||'#111';ctx.fillRect(-12,-24,24,24);ctx.strokeStyle='#fff';ctx.lineWidth=2;
  for(const ox of[-5,5]){ctx.beginPath();ctx.moveTo(ox-3,-18);ctx.lineTo(ox+3,-12);ctx.moveTo(ox+3,-18);ctx.lineTo(ox-3,-12);ctx.stroke()}ctx.restore()}
 /* tosse e tropeço */
-function cough(q){if(q.dsh>0)return;q.cof=40;q.cl=12;/* 0,2s sem andar nem pular */q.kx=-(q.face||1)*[0,6,9,12][tier('tosse')];q.sx=1.25;q.sy=.8;burst(q.x+12+(q.face||1)*12,q.y+8,10,['#a3e635','#fff','#d9f99d'],3,22,.05,3);snd(150,.25,'sawtooth',.05,90);snd(110,.2,'square',.03,70)}
+function cough(q){if(q.dsh>0)return;q.cof=40;q.cl=12;/* 0,2s sem andar nem pular */q.kx=-(q.face||1)*[0,2.5,3.5,5][tier('tosse')];q.sx=1.25;q.sy=.8;burst(q.x+12+(q.face||1)*12,q.y+8,10,['#a3e635','#fff','#d9f99d'],3,22,.05,3);snd(150,.25,'sawtooth',.05,90);snd(110,.2,'square',.03,70)}
 function trip(q,wk){if(q.dsh>0)return;q.trp=36;q.sx=.8;q.sy=1.25;
  if(wk){/* andando: desce devagar = 1/3 da velocidade do mergulho (18/3=6) */
   if(q.g&&(owUnder(q)||q.rid)){q.rid=null;q.pd=14;q.g=false;q.y+=3}
@@ -1385,7 +1385,7 @@ function levelDone(){confetti();
  showOv('<h2>Mapa '+(mapN+1)+' concluído! 🎉</h2><p>Mortes até agora: '+deaths+'.</p><div class="row"><button class="gob alt" id="lvb">← Voltar</button><button class="gob" id="lvc">Continuar →</button></div>');
  $('lvb').onclick=()=>{confettiStop();if(!mp&&!room){curses={};plan=[];deaths=0;loadMap(0)}showStart()};
  $('lvc').onclick=()=>{confettiStop();showCards()}}
-function mapDone(){if(mapN>=MAPS-1)showWin();else{confetti();showCards()}}
+function mapDone(){if(mapN>=MAPS-1)showWin();else showCards()}
 {const _sw=window.showWin;window.showWin=function(){_sw.apply(this,arguments);confetti()}}
 addEventListener('keydown',e=>{if(e.code==='Enter'&&!ovEl.hidden){const c=document.getElementById('lvc');if(c)c.click()}});
 </script>
