@@ -189,9 +189,9 @@ const CURSES=[
  {id:'pulo',n:'Pulo Fraco',s:'\u25BC',c:'#d98e04',d:t=>'Pulo '+7*t+'% mais fraco'},
  {id:'lento',n:'Peso',s:'\u25CF',c:'#3b82f6',d:t=>'Você '+10*t+'% mais lento'},
  {id:'osso',n:'Osso',s:'\u2620',c:'#a8a29e',d:t=>'A cada 3s um osso sobe do chão embaixo de você (aviso vermelho por 1s, osso dura 1s). Largura nível '+t+(t>=2?'. Nível II+: também sobe um osso na sua frente':'')},
- {id:'tosse',n:'Tosse',s:'\u2622',c:'#84cc16',d:t=>'A cada 5s você tosse, é jogado bem para trás (força '+t+') e fica 0,2s sem andar nem pular'},
+ {id:'tosse',n:'Tosse',s:'\u2622',c:'#84cc16',d:t=>'A cada 5s você tosse, é jogado bem para trás (força '+t+') e fica 0,5s sem andar nem pular'},
  {id:'aceleracao',n:'Aceleração',s:'\u27A4',c:'#f97316',d:t=>'Você demora '+[0,.3,.5,.8][t]+'s para chegar na velocidade máxima ao começar a andar (parar é instantâneo)'},
- {id:'lentidao',n:'Lentidão',s:'\u231B',c:'#0ea5e9',d:t=>'A cada '+[0,6,5.5,5][t]+'s você fica 50% mais lento por '+[0,1,1.5,2][t]+'s (aparece lento… em cima de você)'},
+ {id:'lentidao',n:'Lentidão',s:'\u231B',c:'#0ea5e9',d:t=>'A cada '+[0,5,4.5,4][t]+'s você diminui a velocidade um pouco ('+[0,25,35,45][t]+'% no pior momento) por '+[0,1.5,1.8,2.2][t]+'s e depois volta ao normal'},
  {id:'nevoa',n:'Névoa',s:'\u25CC',c:'#64748b',d:t=>'Visão limitada (raio '+[0,280,205,140][t]+')'},
  {id:'gelo',n:'Piso Escorregadio',s:'\u2744',c:'#38bdf8',d:t=>'Chão de gelo: você derrapa '+['','um pouco','bastante','muito'][t]},
  {id:'confuso',n:'Tontura',s:'\u21C4',c:'#ec4899',d:t=>'Controles invertidos por '+[0,1,1.5,2][t]+'s a cada '+[0,10,8,6][t]+'s'},
@@ -326,14 +326,14 @@ function upd(q){
  const tl=tier('risada');
  if(!tl)q.lf=0;else if(started&&!dtm&&cdn<=0){if(q.lf>0){q.lf--;laughFx(q)}else if((q.lc=(q.lc|0)+1)>=[0,8,7,6][tl]*60){q.lc=0;q.lf=60;snd(540,.08,'square',.03,380)}}
  const lg=q.lf>0,WL=Math.max(1,3-tier('cansaco')),k=q.k,iv=inv(),L=lg?false:(iv?k.right:k.left),R=lg?false:(iv?k.left:k.right),dir=(q.stn>0||q.dsh>0||q.cl>0)?0:(R?1:0)-(L?1:0),
-  SP=6.6*(1-.1*tier('lento'))*(slowNow(q)?.5:1),G=.5,jp=1-.07*tier('pulo');
+  SP=6.6*(1-.1*tier('lento'))*slowF(q),G=.5,jp=1-.07*tier('pulo');
  if(q.g)q.wc=0;
  q.coy=q.g?Math.max(2,9-3*tier('borda')):Math.max(0,q.coy-1);q.buf=k.jp?7:Math.max(0,q.buf-1);k.jp=false;if(q.wd>0)q.wd--;
  const tq=tier('inquieto');q.bang=0;if(tq&&started&&!dtm&&cdn<=0){const per=[0,300,210,150][tq],ph=fr%per;if(ph>=per-120)q.bang=per-ph;if(q.g&&ph<6)q.buf=Math.max(q.buf,7)}
  if(dir&&q.wd<=0)q.face=dir;
  {const ta=tier('aceleracao');q.am=ta?(dir?(dir!==q.ld?0:Math.min(1,(q.am||0)+1/[0,18,30,48][ta])):0):1;if(dir)q.ld=dir;const act=started&&!dtm&&cdn<=0;
   if(tier('tosse')&&act){if(q.cof>0)q.cof--;if((q.tc=(q.tc|0)+1)>=300){q.tc=0;cough(q)}}
-  if(tier('lentidao')&&act)q.tt=(q.tt|0)+1}
+  if(tier('lentidao')&&act)q.slc=(q.slc|0)+1}
  const vx=q.wd>0?q.wj*SP*1.1:(tier('gelo')?(q.hv=(q.hv||0)+(dir*SP*q.am-(q.hv||0))*[0,.1,.055,.03][tier('gelo')]):dir*SP*q.am),wl=!q.g&&wallAt(q,-1),wr=!q.g&&wallAt(q,1);
  q.vy=Math.min(q.dive?18:13,q.vy+G);if(q.dsh>0)q.vy=0;if(q.tdn>0){if(q.g||q.dive)q.tdn=0;else{q.tdn--;q.vy=Math.min(q.vy,q.tdv)}}q.ws=0;
  if(!q.dive&&q.vy>0&&((wl&&L)||(wr&&R))){q.vy=Math.min(q.vy,q.wc>=WL?7:(tier('suja')?3.6:1.8));q.ws=wl?-1:1;if(fr%5===0)burst(q.x+(wl?0:24),q.y+12,1,['#999'],1,14,.05,3)}
@@ -502,8 +502,9 @@ function drawImp(q){const im=q.imp,b=im.b,a=im.a0+im.t;if(a>=175)return;const h=
  ctx.fillStyle=q.col||'#111';ctx.fillRect(-12,-24,24,24);ctx.strokeStyle='#fff';ctx.lineWidth=2;
  for(const ox of[-5,5]){ctx.beginPath();ctx.moveTo(ox-3,-18);ctx.lineTo(ox+3,-12);ctx.moveTo(ox+3,-18);ctx.lineTo(ox-3,-12);ctx.stroke()}ctx.restore()}
 /* tosse e tropeço */
-function cough(q){if(q.dsh>0)return;q.cof=40;q.cl=12;/* 0,2s sem andar nem pular */q.kx=-(q.face||1)*[0,2.5,3.5,5][tier('tosse')];q.sx=1.25;q.sy=.8;burst(q.x+12+(q.face||1)*12,q.y+8,10,['#a3e635','#fff','#d9f99d'],3,22,.05,3);snd(150,.25,'sawtooth',.05,90);snd(110,.2,'square',.03,70)}
-function slowNow(q){const t=tier('lentidao');if(!t)return false;const per=[0,360,330,300][t],dur=[0,60,90,120][t];return (q.tt|0)%per>=per-dur}
+function cough(q){if(q.dsh>0)return;q.cof=40;q.cl=30;/* 0,5s sem andar nem pular */q.kx=-(q.face||1)*[0,2.5,3.5,5][tier('tosse')];q.sx=1.25;q.sy=.8;burst(q.x+12+(q.face||1)*12,q.y+8,10,['#a3e635','#fff','#d9f99d'],3,22,.05,3);snd(150,.25,'sawtooth',.05,90);snd(110,.2,'square',.03,70)}
+function slowF(q){const t=tier('lentidao');if(!t)return 1;const per=[0,300,270,240][t],dur=[0,90,110,130][t],ph=(q.slc|0)%per;if(ph<per-dur)return 1;const k=(ph-(per-dur))/dur;return 1-[0,.25,.35,.45][t]*Math.sin(Math.PI*k)}
+function slowNow(q){return slowF(q)<.93}
 function trip(q,wk){if(q.dsh>0)return;q.trp=36;q.sx=.8;q.sy=1.25;
  if(wk){/* andando: desce devagar = 1/3 da velocidade do mergulho (18/3=6) */
   if(q.g&&(owUnder(q)||q.rid)){q.rid=null;q.pd=14;q.g=false;q.y+=3}
@@ -1107,7 +1108,7 @@ function artDraw(c,id,W,H,col){
  else if(id==='meteoro'){ground();cube(100,60);for(const[x,y,z]of[[40,34,1],[120,20,1.2],[168,44,.9]]){c.save();c.translate(x,y);c.rotate(.35);const g=c.createLinearGradient(0,-50*z,0,0);g.addColorStop(0,col+'00');g.addColorStop(1,col);c.fillStyle=g;c.beginPath();c.moveTo(-8*z,0);c.lineTo(0,-54*z);c.lineTo(8*z,0);c.fill();c.fillStyle=col;c.beginPath();c.arc(0,0,10*z,0,7);c.fill();c.fillStyle='#fde047';c.beginPath();c.arc(-2*z,-2*z,5*z,0,7);c.fill();c.restore()}
   c.fillStyle='#e11d2e';c.fillRect(88,GY-3,40,3)}
  else if(id==='osso'){ground();c.fillStyle='#e11d2e';c.fillRect(70,GY-3,40,3);c.fillStyle='#f3ecd8';c.strokeStyle='#b8ad8c';c.lineWidth=2;c.fillRect(81,30,18,48);c.strokeRect(81,30,18,48);for(const s of[-1,1]){c.beginPath();c.arc(90+s*8,32,9,0,7);c.fill();c.stroke()}cube(140,60)}
- else if(id==='tosse'){ground();cube(90,60);c.fillStyle=col;for(const[x,y,r]of[[70,64,5],[58,60,7],[44,66,9]]){c.globalAlpha=.7;c.beginPath();c.arc(x,y,r,0,7);c.fill()}c.globalAlpha=1;c.fillStyle='#111';c.font='bold 14px sans-serif';c.fillText('COF!',50,48)}
+ else if(id==='tosse'){ground();cube(90,60);c.fillStyle=col;for(const[x,y,r]of[[114,64,5],[126,60,7],[140,66,9]]){c.globalAlpha=.7;c.beginPath();c.arc(x,y,r,0,7);c.fill()}c.globalAlpha=1;c.fillStyle='#111';c.font='bold 14px sans-serif';c.fillText('COF!',128,46)}
  else if(id==='aceleracao'){ground();cube(120,60);c.fillStyle=col;for(let i=0;i<5;i++){c.globalAlpha=.25+i*.15;c.fillRect(30+i*14,40+i*6,10,3+i*3)}c.globalAlpha=1}
  else if(id==='lentidao'){ground();cube(80,60);c.fillStyle=col;c.font='bold 16px system-ui';c.textAlign='center';c.fillText('zZz',116,50);c.fillRect(138,58,22,3);c.fillRect(146,52,14,3);c.fillRect(154,46,6,3)}
  else{ground();cube(91,60);ring(100,50,34,5)}
