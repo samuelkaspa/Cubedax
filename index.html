@@ -150,12 +150,12 @@ function fly(n,mode){const r=rngf(n*31337+5),ri=(a,b)=>a+fl(r()*(b-a+1)),K=Math.
  const m=fl(K/2),sw=ps[m],nx=ps[m+1];F(sw.x+1,rowOf(sw)-1,1,1,'a');F(nx.x-1,1,1,H-3,'A');
  const f=ps[K];F(f.x+1,rowOf(f)-1,1,1,'G');cp={x:3,y:rowOf(ps[0])-1};if(r()<.5)mir()}
 function planAt(n){if(!plan.p){const a=[...Array(15).keys()];a.sort(()=>Math.random()-.5);plan.p=a}return{t:plan.p[n%15],s:fl(Math.random()*1e6)}}
-function zig(n){const r=rngf(n*911+13),ri=(a,b)=>a+fl(r()*(b-a+1)),W=15+ri(0,3),K=8+fl(n/3)+ri(0,2),ys=[0];
- for(let i=1;i<=K;i++)ys.push(ys[i-1]+ri(2,3));
+function zig(n){const r=rngf(n*911+13),ri=(a,b)=>a+fl(r()*(b-a+1)),W=21+ri(0,3),K=8+fl(n/3)+ri(0,2),ys=[0];
+ for(let i=1;i<=K;i++)ys.push(ys[i-1]+ri(3,4));
  const H=ys[K]+12,row=i=>H-5-ys[i];newGrid(W,H);C(1,1,W-2,H-3);F(1,H-2,W-2,1,'^');F(1,row(0),W-2,1,'#');
- for(let i=1;i<=K;i++){if(i%2)F(5,row(i),W-6,1,'#');else F(1,row(i),W-6,1,'#');
-  if(i>1&&i<K&&r()<.3+n/60)F((i%2?5:1)+fl((W-6)/2),row(i)-1,1,1,'k')}
- F(fl(W/2),row(K)-1,1,1,'G');mapEn={g:0,b:1+fl(n/8)};cp={x:3,y:row(0)-1};if(r()<.5)mir()}
+ for(let i=1;i<=K;i++){if(i%2)F(7,row(i),W-8,1,'#');else F(1,row(i),W-8,1,'#');
+  if(i>1&&i<K&&r()<.3+n/60)F((i%2?7:1)+fl((W-8)/2),row(i)-1,1,1,'k')}
+ F(fl(W/2),row(K)-1,1,1,'G');mapEn={g:0,b:Math.min(2,1+fl(n/12))};cp={x:3,y:row(0)-1};if(r()<.5)mir()}
 function arena(n){const r=rngf(n*577+19),ri=(a,b)=>a+fl(r()*(b-a+1)),W=36+2*ri(0,3),H=27,row=i=>H-5-3*i,m=fl(W/2);
  newGrid(W,H);C(1,1,W-2,H-3);
  for(let i=0;i<5;i++){const R=row(i);if(i%2===0){F(3,R,9,1,'#');F(W-12,R,9,1,'#')}else{F(m-5,R,10,1,'#');F(1,R,5,1,'#');F(W-6,R,5,1,'#')}}
@@ -259,7 +259,7 @@ function drawWin(q){if(q.win>=56)return;if(race&&!race.bt){drawWinRace(q);return
  ctx.save();ctx.translate(m.x,m.y);ctx.rotate(m.e*Math.PI*4);ctx.scale(Math.max(.01,s*(1+st)),Math.max(.01,s*(1-st*.6)));ctx.globalAlpha=Math.max(0,1-m.e*m.e*.8);
  ctx.fillStyle=q.col||(q.id?'#1d4ed8':'#111');ctx.fillRect(-12,-12,24,24);ctx.fillStyle='#fff';for(const ox of[-5,5])ctx.fillRect(ox-3.5,-5.5,7,7);ctx.restore()}
 function edgeOk(x,y){if(!g[y+1]||y<3)return false;for(let i=-1;i<=1;i++)if(g[y+1][x+i]!=='#')return false;
- for(let j=0;j<=2;j++)for(let i=-1;i<=1;i++)if(!g[y-j]||g[y-j][x+i]!=='.'&&!(i===0&&j===0))return false;
+ for(let j=0;j<=3;j++)for(let i=-1;i<=1;i++)if(!g[y-j]||g[y-j][x+i]!=='.'&&!(i===0&&j===0))return false;
  for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){const c=g[y+j]&&g[y+j][x+i];if(c&&'abcdeABCDEG'.includes(c))return false}
  return true}
 function pruneK(){const keep=[],r=rngf(777),ok=(x,y)=>keep.every(k=>Math.abs(k.x-x)>=2||Math.abs(k.y-y)>=4);
@@ -384,7 +384,7 @@ function update(){
  for(const q of AP())if(q.win!==undefined&&q.win<300){q.win++;const m=winPos(q);
    if(q.win<55&&q.win%2===0)burst(m.x,m.y,1,['#f5b800','#fff'],1,18,0,3);
    if(q.win===50){const cx=gx*T+16,cy=gy*T+16;burst(cx,cy,30,['#f5b800','#fff','#111'],6,36,.12,4);rings.push({x:cx,y:cy,r:4,l:22,c:'#f5b800'});snd(660,.2,'square',.05,1320)}}
- if(state==='won'){if(wt>0)wt--;if(wt<=0&&!rplBusy()){state='done';mapDone()}return}
+ if(state==='won'){if(wt>0)wt--;if(wt<=0&&!rplBusy()&&!deathAnimBusy()){state='done';mapDone()}return}
  if(state!=='play'&&state!=='rover')return;
  for(const q of AP())if(q.mf!==undefined&&q.mf<MT){q.mf++;const m=meltPos(q);
   if(q.mf%2===0)burst(m.x+(Math.random()-.5)*16,m.y-4,1,['#ff7a2a','#e11d2e','#111'],1,22,.12,4);
@@ -963,6 +963,7 @@ function drawReplay(R0){const R=R0||RPL;if(!R||!R.fr.length)return;const f=R.fr[
 
 /* ===== v4: corrida, replay grande, tela cheia ===== */
 let cKind='coop',hb=0,lastCode=0;
+function deathAnimBusy(){return AP().some(q=>!q.alive&&(q.mf!==undefined&&q.mf<MT||q.cut!==undefined&&q.cut<60||q.imp&&q.imp.t<50))||en.some(e=>e.eat&&!e.dead&&e.eat.t<90)}
 function rplBusy(){return!!(RPL||rq.length||rpend.length)}
 function rbigNow(){return !!rview||state==='rover'||state==='won'||(P.length>0&&P.every(q=>!q.alive)&&RP.every(q=>!q.alive))}
 function rendMsg(m){if(!race)return;race.score=m.score||race.score;race.w=m.w;race.over=!!m.over;race.mw=m.mw;race.sent=0;race.shown=0;
@@ -1384,7 +1385,7 @@ function levelDone(){confetti();
  showOv('<h2>Mapa '+(mapN+1)+' concluído! 🎉</h2><p>Mortes até agora: '+deaths+'.</p><div class="row"><button class="gob alt" id="lvb">← Voltar</button><button class="gob" id="lvc">Continuar →</button></div>');
  $('lvb').onclick=()=>{confettiStop();if(!mp&&!room){curses={};plan=[];deaths=0;loadMap(0)}showStart()};
  $('lvc').onclick=()=>{confettiStop();showCards()}}
-function mapDone(){if(mapN>=MAPS-1)showWin();else if(mp||room){confetti();showCards()}else levelDone()}
+function mapDone(){if(mapN>=MAPS-1)showWin();else{confetti();showCards()}}
 {const _sw=window.showWin;window.showWin=function(){_sw.apply(this,arguments);confetti()}}
 addEventListener('keydown',e=>{if(e.code==='Enter'&&!ovEl.hidden){const c=document.getElementById('lvc');if(c)c.click()}});
 </script>
